@@ -1,7 +1,8 @@
-// Importing required modules
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); // Import cors
+
 
 // Initialize the app
 const app = express();
@@ -55,6 +56,71 @@ app.post('/api/lessons', async (req, res) => {
     res.status(500).json({ error: 'Error saving lesson' });
   }
 });
+
+
+
+
+
+// Define the User schema and model
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  role: { type: String, default: 'user' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+
+// GET method to fetch all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching users' });
+  }
+});
+
+// POST method to create a new user
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Name and email are required.' });
+    }
+
+    const newUser = new User({ name, email, role });
+    const savedUser = await newUser.save();
+    res.status(201).json(savedUser);
+  } catch (err) {
+    // Handle duplicate email error
+    if (err.code === 11000) {
+      res.status(400).json({ error: 'Email already exists.' });
+    } else {
+      res.status(500).json({ error: 'Error saving user' });
+    }
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
